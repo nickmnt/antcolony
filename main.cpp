@@ -88,39 +88,6 @@ void setupAnts(int number_of_ants)
     current_index = 0;
 }
 
-int selectNextCity(Ant ant)
-{
-    int t = rand() % (NUM_CITIES - current_index);
-    if (rand() < randomFactor)
-    {
-        if (!(ant.isVisited(t)))
-        {
-            return t;
-        }
-    }
-    calculateProbabilities(ant);
-    double r = randDouble();
-    double total = 0;
-    for (int i = 0; i < NUM_CITIES; i++) {
-        total += probabilities[i];
-        if (total >= r) {
-            return i;
-        }
-    }
-}
-
-void moveAnts()
-{
-    for (int i = current_index; i < NUM_CITIES; ++i)
-    {
-        for (Ant ant : ants)
-        {
-            ant.visitCity(current_index, selectNextCity(ant));
-        }
-        current_index++;
-    }
-}
-
 void calculateProbabilities(Ant ant)
 {
     int i = ant.trail[current_index];
@@ -143,6 +110,40 @@ void calculateProbabilities(Ant ant)
             double numerator = pow(trails[i][j], alpha) * pow(1.0 / graph[i][j], beta);
             probabilities[j] = numerator / pheromone;
         }
+    }
+}
+
+int selectNextCity(Ant ant)
+{
+    int t = rand() % (NUM_CITIES - current_index);
+    if (rand() < randomFactor)
+    {
+        if (!(ant.isVisited(t)))
+        {
+            return t;
+        }
+    }
+    calculateProbabilities(ant);
+    double r = randDouble();
+    double total = 0;
+    for (int i = 0; i < NUM_CITIES; i++) {
+        total += probabilities[i];
+        if (total >= r) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void moveAnts()
+{
+    for (int i = current_index; i < NUM_CITIES; ++i)
+    {
+        for (Ant ant : ants)
+        {
+            ant.visitCity(current_index, selectNextCity(ant));
+        }
+        current_index++;
     }
 }
 
