@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <math.h>
 #include <time.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -16,7 +17,6 @@ double antFactor = 0.8;
 double randomFactor = 0.01;
 int maxIterations = 2000;
 #define NUM_CITIES 20
-#define TRAIL_SIZE 20
 double probabilities[NUM_CITIES];
 double graph[NUM_CITIES][NUM_CITIES];
 double trails[NUM_CITIES][NUM_CITIES];
@@ -27,21 +27,27 @@ int best_tour_length = -1;
 class Ant
 {
 public:
-    int visited[NUM_CITIES];
-    int trail[TRAIL_SIZE];
+    bool visited[NUM_CITIES];
+    int trail[NUM_CITIES];
+
+    Ant() {
+        for(int i = 0; i < NUM_CITIES; ++i) {
+            visited[i] = false;
+        }
+    }
 
     int trailSize() {
-        for(int i = 0; i < TRAIL_SIZE; ++i) {
+        for(int i = 0; i < NUM_CITIES; ++i) {
             if(trail[i] == -1) {
                 return i+1;
             }
         }
-        return TRAIL_SIZE;
+        return NUM_CITIES;
     }
 
     void visitCity(int current_index, int city)
     {
-        trail[current_index + 1] = city;
+        trail[current_index+1] = city;
         visited[city] = true;
     }
 
@@ -52,6 +58,7 @@ public:
 
     double trailLength()
     {
+        printf("\ndebugtrail %d, %d: %f\n", trail[trailSize() - 1],trail[0], graph[trail[trailSize() - 1]][trail[0]]);
         double length = graph[trail[trailSize() - 1]][trail[0]];
         for (int i = 0; i < trailSize() - 1; i++)
         {
@@ -62,7 +69,7 @@ public:
 
     void clear()
     {
-        for (int i = 0; i < TRAIL_SIZE; ++i)
+        for (int i = 0; i < NUM_CITIES; ++i)
         {
             trail[i] = -1;
         }
@@ -132,12 +139,12 @@ int selectNextCity(Ant ant)
             return i;
         }
     }
-    return -1;
+    return NUM_CITIES-1;
 }
 
 void moveAnts()
 {
-    for (int i = current_index; i < NUM_CITIES; ++i)
+    for (int i = current_index; i < NUM_CITIES-1; ++i)
     {
         for (Ant ant : ants)
         {
@@ -177,15 +184,16 @@ void updateBest()
 {
     if (best_tour_order[0] == -1)
     {
-        clone(TRAIL_SIZE, ants[0].trail, best_tour_order);
+        clone(NUM_CITIES, ants[0].trail, best_tour_order);
         best_tour_length = ants[0].trailLength();
+        printf("best %d", ants[0].trailLength());
     }
     for (Ant a : ants)
     {
         if (a.trailLength() < best_tour_length)
         {
             best_tour_length = a.trailLength();
-            clone(TRAIL_SIZE, a.trail, best_tour_order);
+            clone(NUM_CITIES, a.trail, best_tour_order);
         }
     }
 }
@@ -208,10 +216,17 @@ int main()
     for(int i = 0; i < numberOfAnts; ++i) {
         ants.push_back(Ant());
     }
+    for(int i = 0; i < NUM_CITIES; ++i) {
+        probabilities[i] = 0.5;
+        best_tour_order[i] = -1;
+    }
 
-    for(int i = 0; i < maxIterations; ++i) {
+    for(int i = 0; i < 100; ++i) {
         moveAnts();
+        printf("reach?");
         updateTrails();
         updateBest();
     }
+
+    printf("Best tour length: %d", best_tour_length);
 }
