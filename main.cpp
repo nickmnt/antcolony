@@ -29,6 +29,12 @@ int current_index = 0;
 int best_tour_order[NUM_CITIES];
 double best_tour_length = -1;
 
+void hamiltonian_cycle_graph( int v,
+                              int e,
+                              int dir_flag,
+                              char* out_file,
+                              char* ham_file );
+
 class Ant
 {
 public:
@@ -202,15 +208,19 @@ void updateBest()
 }
 
 void generateRandomMatrix() {
-    for(int i = 0; i < NUM_CITIES; ++i) {
-        for(int j = 0; j < NUM_CITIES; ++j) {
-            if(randDouble() <= 1) {
-                graph[i][j] = randDouble() * 500;
-            } else {
-                graph[i][j] = 0;
-            }
-        }
-    }
+    int is_directed = 0;
+    hamiltonian_cycle_graph(NUM_CITIES,(NUM_CITIES*4),is_directed,"outpu-graph.txt","ham-path.txt");
+    // for(int i = 0; i < NUM_CITIES; ++i) {
+    //     for(int j = 0; j < NUM_CITIES; ++j) {
+    //         printf("%5d   %5d   %5f u\n", i, j, graph[i][j] );
+            
+            // if(randDouble() <= 1) {
+            //     graph[i][j] = randDouble() * 500;
+            // } else {
+            //     graph[i][j] = 0;
+            // }
+    //     }
+    // }
 }
 
 int main()
@@ -228,6 +238,7 @@ int main()
     }
 
     double best[maxIterations];
+    printf("\n        initializing...\n");
 
     for(int i = 0; i < maxIterations; ++i) {
         setupAnts(numberOfAnts);
@@ -255,5 +266,177 @@ int main()
     printf("Best tour length: %f", best_tour_length);
 }
 
-//TODO: Fix visiting city twice
-//TODO: Fix no guarantee of having a solution in graph (in not fully connected)
+//TODO: Fix visiting city twice 
+//TODO(done): Fix no guarantee of having a solution in graph (in not fully connected)
+
+
+/* This function writes a simple graph with a Hamiltonian cycle to one
+   file and a Hamiltonian cycle to another file. The graph will
+   have max(e,v) edges. The graph can be directed or undirected. It is
+   assumed that e <= v(v-1)/2 if the graph is undirected, and that
+   e <= v(v-1) if the grpah is directed. (In this program,
+   this assured because of the call to fix_imbalanced_graph.)
+
+   To generate a random graph with a
+   Hamiltonian cycle, we begin with a random permutation
+   ham[0],...,ham[v-1] (v = number of vertices).  We then generate edges
+
+   (ham[0],ham[1]),(ham[1],ham[2]),...,(ham[v-2],ham[v-1]),(ham[v-1],ham[0]),
+
+   so that the graph has the Hamiltonian cycle
+
+                     ham[0],...,ham[v-1],ham[0].
+
+   Finally,  we  add random edges to produce the desired number
+   of edges.
+ */
+void print_graph( int v,
+                  int e,
+                  char* out_file,
+                  int* adj_matrix,
+                  int dir_flag );
+                
+void init_array( int* a, int end );
+int ran( int k );
+void swap( int* a, int *b );
+void permute( int* a, int n );
+
+void hamiltonian_cycle_graph( int v,
+                              int e,
+                              int dir_flag,
+                              char* out_file,
+                              char* ham_file )
+{
+   int i, j, k, l, count, index, *adj_matrix, *ham;
+   FILE *fptr;
+
+   if ( ( adj_matrix = ( int * ) calloc( v * v, sizeof( int ) ) )
+        == NULL ) {
+      printf( "Not enough room for this size graph\n" );
+      return;
+   }
+
+   if ( ( ham = ( int * ) calloc( v, sizeof( int ) ) ) == NULL ) {
+      printf( "Not enough room for this size graph\n" );
+      free( adj_matrix );
+      return;
+   }
+
+   printf( "\n\tBeginning construction of graph.\n" );
+
+   /*  Generate a random permutation in the array ham. */
+   init_array( ham, v );
+   permute( ham, v );
+
+   if ( ( fptr = fopen( ham_file, "w" ) ) == NULL ) {
+      printf( "\n\t\t Could not open file %s.\n", ham_file );
+      free( adj_matrix );
+      free( ham );
+      return;
+   }
+
+   /* print Hamiltonian cycle and store required edges */
+   for ( i = 0; i < v; i++ ) {
+      fprintf( fptr, "%5d\n", 1 + ham[ i ] );
+      k = ham[ i ];
+      l = ham[ ( i + 1 ) % v ];
+      if ( k > l && !dir_flag )
+         swap( &k, &l );
+      adj_matrix[ k * v + l ] = 1;
+   }
+
+   fprintf( fptr, "%5d\n", 1 + ham[ 0 ] );
+   fclose( fptr );
+   free( ham );
+
+   for ( count = v; count < e; ) {
+      if ( ( i = ran( v ) ) == ( j = ran( v ) ) )
+         continue;
+      if ( i > j && !dir_flag )
+         swap( &i, &j );
+      index = i * v + j;
+      if ( !adj_matrix[ index ] ) {
+         adj_matrix[ index ] = 1;
+         count++;
+      }
+   }
+
+   print_graph( v, count, out_file, adj_matrix, dir_flag );
+}
+
+/* set a[ i ] = i, for i = 0,...,end - 1 */
+void init_array( int* a, int end )
+{
+   int i;
+
+   for ( i = 0; i < end; i++ )
+      *a++ = i;
+}
+
+/* randomly permute a[ 0 ],...,a[ n - 1 ] */
+void permute( int* a, int n )
+{
+   int i;
+
+   for ( i = 0; i < n - 1; i++ )
+      swap( a + i + ran( n - i ), a + i );
+}
+
+void swap( int* a, int *b )
+{
+   int temp;
+
+   temp = *a;
+   *a = *b;
+   *b = temp;
+}
+
+/* Return a random integer between 0 and k-1 inclusive. */
+int ran( int k )
+{
+   return rand() % k;
+}
+
+
+void print_graph( int v,
+                  int e,
+                  char* out_file,
+                  int* adj_matrix,
+                  int dir_flag )
+{
+   int i, j, index;
+   FILE *fp;
+
+   if ( ( fp = fopen( out_file, "w" ) ) == NULL ) {
+      printf( "Unable to open file %s for writing.\n", out_file );
+      return;
+   }
+   printf( "\n\tWriting graph to file %s.\n", out_file );
+
+   fprintf( fp, "%5d   %5d\n", v, e );
+
+   if ( !dir_flag )
+      for ( i = 1; i < v; i++ )
+         for ( j = i + 1; j <= v; j++ ) {
+            index = ( i - 1 ) * v + j - 1;
+            if ( adj_matrix[ index ] ){
+               fprintf( fp, "%5d   %5d   %5f\n", i, j, (adj_matrix[ index ] * (randDouble() * 500)) );
+               graph[i][j] = adj_matrix[ index ] * (randDouble() * 500);
+            }else{
+                graph[i][j] = 0;
+            }
+         }
+   else
+      for ( i = 1; i <= v; i++ )
+         for ( j = 1; j <= v; j++ ) {
+            index = ( i - 1 ) * v + j - 1;
+            if ( adj_matrix[ index ] ){
+               fprintf( fp, "%5d   %5d   %5f\n", i, j, (adj_matrix[ index ] * (randDouble() * 500)) );
+               graph[i-1][j-1] = adj_matrix[ index ] * (randDouble() * 500);
+            }else{
+                graph[i-1][j-1] = 0;
+            }
+         }
+   fclose( fp );
+   printf( "\tGraph is written to file %s.\n", out_file );
+}
