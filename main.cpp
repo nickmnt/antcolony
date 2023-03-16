@@ -134,7 +134,7 @@ int selectNextCity(Ant ant)
     int t = rand() % NUM_CITIES;
     if (randDouble() < randomFactor)
     {
-        if (!(ant.isVisited(t)) && graph[ant.trail[current_index]][t] > 0)
+        if ((!ant.isVisited(t)) && graph[ant.trail[current_index]][t] > 0) // ! should be inside
         {
             return t;
         }
@@ -208,17 +208,6 @@ void updateBest()
 }
 
 void generateRandomMatrix() {
-<<<<<<< HEAD
-    for(int i = 0; i < NUM_CITIES; ++i) {
-        for(int j = 0; j < NUM_CITIES; ++j) {
-            if(randDouble() <= 0.5) {
-                graph[i][j] = randDouble() * 500;
-            } else {
-                graph[i][j] = 0;
-            }
-        }
-    }
-=======
     int is_directed = 0;
     hamiltonian_cycle_graph(NUM_CITIES,(NUM_CITIES*4),is_directed,"outpu-graph.txt","ham-path.txt");
     // for(int i = 0; i < NUM_CITIES; ++i) {
@@ -232,7 +221,6 @@ void generateRandomMatrix() {
             // }
     //     }
     // }
->>>>>>> 63913bd0ac6d1ab96d6a872a35b41ffece2f4d4e
 }
 
 int main()
