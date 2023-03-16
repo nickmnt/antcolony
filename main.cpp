@@ -229,13 +229,6 @@ int main()
     double best[maxIterations];
     printf("\n        initializing...\n");
 
-    for(int i = 0; i < NUM_CITIES; ++i) {
-        for(int j = 0; j < NUM_CITIES; ++j) {
-            printf("%0.2f ", graph[i][j]);
-        }
-        printf("\n");
-    }
-
     for(int i = 0; i < maxIterations; ++i) {
         setupAnts(numberOfAnts);
         randomFactor = max(RAND_FACT_END, RAND_FACT_START - i / RAND_FACT_LAST_ITER);
