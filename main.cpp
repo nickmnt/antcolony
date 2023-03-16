@@ -13,14 +13,15 @@ double c = 1.0;
 double alpha = 1;
 double beta = 5;
 double evaporation = 0.5;
-double Q = 50;
+double Q = 500;
 double antFactor = 0.8;
-double randomFactor = 0.01;
-int maxIterations = 1000;
+double randomFactor = 1.0;
+int maxIterations = 20000;
 #define RAND_FACT_START 1.00
-#define RAND_FACT_END 0.05
-#define RAND_FACT_LAST_ITER 500
+#define RAND_FACT_END 0.10
+#define RAND_FACT_LAST_ITER 2000
 #define NUM_CITIES 20
+#define EPSILON 0.0000001
 double probabilities[NUM_CITIES];
 double graph[NUM_CITIES][NUM_CITIES];
 double trails[NUM_CITIES][NUM_CITIES];
@@ -90,7 +91,7 @@ void setupAnts(int number_of_ants)
         for (Ant& ant : ants)
         {
             ant.clear();
-            ant.visitCity(-1, rand() % 20 + 1);
+            ant.visitCity(-1, rand() % NUM_CITIES + 1);
         }
     }
     current_index = 0;
@@ -102,37 +103,32 @@ void calculateProbabilities(Ant ant)
     double pheromone = 0.0;
     for (int l = 0; l < NUM_CITIES; l++)
     {
-        if (!ant.isVisited(l))
+        if (!ant.isVisited(l) && graph[i][l] > 0)
         {
             pheromone += pow(trails[i][l], alpha) * pow(1.0 / graph[i][l], beta);
             // printf("\n phero: %f", pow(trails[i][l], alpha));
         }
     }
-    int c = 0;
     for (int j = 0; j < NUM_CITIES; j++)
     {
-        if (ant.isVisited(j))
+        if (ant.isVisited(j) || graph[i][j] == 0)
         {
             probabilities[j] = 0.0;
-            c++;
         }
         else
         {
-            double numerator = pow(trails[i][j], alpha) * pow(1.0 / graph[i][j], beta);
-            probabilities[j] = (numerator+0.01) / (pheromone+0.01);
+            double numerator = pow(trails[i][j]+EPSILON, alpha) * pow(1.0 / graph[i][j], beta);
+            probabilities[j] = (numerator) / (pheromone+EPSILON);
         }
     }
-    // if(c == NUM_CITIES) {
-        // printf("wtfau %d %d", current_index, ant.trailSize());
-    // }
 }
 
 int selectNextCity(Ant ant)
 {
-    int t = rand() % (NUM_CITIES - current_index);
+    int t = rand() % NUM_CITIES;
     if (randDouble() < randomFactor)
     {
-        if (!(ant.isVisited(t)))
+        if (!(ant.isVisited(t)) && graph[ant.trail[current_index]][t] > 0)
         {
             return t;
         }
@@ -208,14 +204,18 @@ void updateBest()
 void generateRandomMatrix() {
     for(int i = 0; i < NUM_CITIES; ++i) {
         for(int j = 0; j < NUM_CITIES; ++j) {
-            graph[i][j] = randDouble() * 500;
+            if(randDouble() <= 1) {
+                graph[i][j] = randDouble() * 500;
+            } else {
+                graph[i][j] = 0;
+            }
         }
     }
 }
 
 int main()
 {
-    srand((unsigned)time(NULL));
+    // srand((unsigned)time(NULL));
 
     generateRandomMatrix();
     int numberOfAnts = (int)(NUM_CITIES * antFactor);
@@ -227,18 +227,30 @@ int main()
         best_tour_order[i] = -1;
     }
 
+    double best[maxIterations];
+
     for(int i = 0; i < maxIterations; ++i) {
         setupAnts(numberOfAnts);
         randomFactor = max(RAND_FACT_END, RAND_FACT_START - i / RAND_FACT_LAST_ITER);
         moveAnts();
         updateTrails();
         updateBest();
+        best[i] = best_tour_length;
     }
 
     printf("\n Best tour:");
     for(int& i : best_tour_order) {
         printf("%d -> ", i);
     }
+
+    ofstream MyFile("results.txt");
+    for(int i = 0; i < maxIterations; ++i) {
+        MyFile << best[i];
+        if(i != maxIterations-1)
+            MyFile << ",";
+    }
+    MyFile.close();
+
     printf("%d\n", best_tour_order[0]);
     printf("Best tour length: %f", best_tour_length);
 }
