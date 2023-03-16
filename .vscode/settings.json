@@ -10,6 +10,7 @@
         "new": "cpp",
         "atomic": "cpp",
         "limits": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "cmath": "cpp"
     }
 }

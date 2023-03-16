@@ -215,7 +215,7 @@ void generateRandomMatrix() {
 
 int main()
 {
-    // srand((unsigned)time(NULL));
+    srand((unsigned)time(NULL));
 
     generateRandomMatrix();
     int numberOfAnts = (int)(NUM_CITIES * antFactor);
