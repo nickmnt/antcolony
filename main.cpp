@@ -409,8 +409,9 @@ void print_graph( int v,
          for ( j = i + 1; j <= v; j++ ) {
             index = ( i - 1 ) * v + j - 1;
             if ( adj_matrix[ index ] ){
-               fprintf( fp, "%5d   %5d   %5f\n", i, j, (adj_matrix[ index ] * (randDouble() * 500)) );
-               graph[i][j] = adj_matrix[ index ] * (randDouble() * 500);
+                double w = (adj_matrix[ index ] * (randDouble() * 500));
+               fprintf( fp, "%5d   %5d   %5f\n", i, j,  w);
+               graph[i][j] = w;
             }else{
                 graph[i][j] = 0;
             }
@@ -420,8 +421,9 @@ void print_graph( int v,
          for ( j = 1; j <= v; j++ ) {
             index = ( i - 1 ) * v + j - 1;
             if ( adj_matrix[ index ] ){
-               fprintf( fp, "%5d   %5d   %5f\n", i, j, (adj_matrix[ index ] * (randDouble() * 500)) );
-               graph[i-1][j-1] = adj_matrix[ index ] * (randDouble() * 500);
+                double w = (adj_matrix[ index ] * (randDouble() * 500));
+               fprintf( fp, "%5d   %5d   %5f\n", i, j, w );
+               graph[i-1][j-1] = w;
             }else{
                 graph[i-1][j-1] = 0;
             }
