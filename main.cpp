@@ -254,3 +254,6 @@ int main()
     printf("%d\n", best_tour_order[0]);
     printf("Best tour length: %f", best_tour_length);
 }
+
+//TODO: Fix visiting city twice
+//TODO: Fix no guarantee of having a solution in graph (in not fully connected)
