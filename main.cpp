@@ -21,7 +21,7 @@ int maxIterations = 20000;
 #define RAND_FACT_END 0.10
 #define RAND_FACT_LAST_ITER 2000
 #define NUM_CITIES 20
-#define EPSILON 0.0000001
+#define EPSILON 0.0001
 double probabilities[NUM_CITIES];
 double graph[NUM_CITIES][NUM_CITIES];
 double trails[NUM_CITIES][NUM_CITIES];
@@ -117,8 +117,8 @@ void calculateProbabilities(Ant ant)
         }
         else
         {
-            double numerator = pow(trails[i][j]+EPSILON, alpha) * pow(1.0 / graph[i][j], beta);
-            probabilities[j] = (numerator) / (pheromone+EPSILON);
+            double numerator = pow(trails[i][j], alpha) * pow(1.0 / graph[i][j], beta);
+            probabilities[j] = max(EPSILON, (numerator) / (pheromone+EPSILON));
         }
     }
 }
@@ -204,7 +204,7 @@ void updateBest()
 void generateRandomMatrix() {
     for(int i = 0; i < NUM_CITIES; ++i) {
         for(int j = 0; j < NUM_CITIES; ++j) {
-            if(randDouble() <= 1) {
+            if(randDouble() <= 0.5) {
                 graph[i][j] = randDouble() * 500;
             } else {
                 graph[i][j] = 0;
