@@ -210,17 +210,6 @@ void updateBest()
 void generateRandomMatrix() {
     int is_directed = 0;
     hamiltonian_cycle_graph(NUM_CITIES,(NUM_CITIES*4),is_directed,"outpu-graph.txt","ham-path.txt");
-    // for(int i = 0; i < NUM_CITIES; ++i) {
-    //     for(int j = 0; j < NUM_CITIES; ++j) {
-    //         printf("%5d   %5d   %5f u\n", i, j, graph[i][j] );
-            
-            // if(randDouble() <= 1) {
-            //     graph[i][j] = randDouble() * 500;
-            // } else {
-            //     graph[i][j] = 0;
-            // }
-    //     }
-    // }
 }
 
 int main()
