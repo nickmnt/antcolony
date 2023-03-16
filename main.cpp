@@ -229,6 +229,13 @@ int main()
     double best[maxIterations];
     printf("\n        initializing...\n");
 
+    for(int i = 0; i < NUM_CITIES; ++i) {
+        for(int j = 0; j < NUM_CITIES; ++j) {
+            printf("%0.2f ", graph[i][j]);
+        }
+        printf("\n");
+    }
+
     for(int i = 0; i < maxIterations; ++i) {
         setupAnts(numberOfAnts);
         randomFactor = max(RAND_FACT_END, RAND_FACT_START - i / RAND_FACT_LAST_ITER);
@@ -409,10 +416,11 @@ void print_graph( int v,
          for ( j = i + 1; j <= v; j++ ) {
             index = ( i - 1 ) * v + j - 1;
             if ( adj_matrix[ index ] ){
-               fprintf( fp, "%5d   %5d   %5f\n", i, j, (adj_matrix[ index ] * (randDouble() * 500)) );
-               graph[i][j] = adj_matrix[ index ] * (randDouble() * 500);
+                double x = randDouble() * 500;
+               fprintf( fp, "%5d   %5d   %5f\n", i, j, (adj_matrix[ index ] * (x)) );
+               graph[i-1][j-1] = adj_matrix[ index ] * (x);
             }else{
-                graph[i][j] = 0;
+                graph[i-1][j-1] = 0;
             }
          }
    else
@@ -420,8 +428,9 @@ void print_graph( int v,
          for ( j = 1; j <= v; j++ ) {
             index = ( i - 1 ) * v + j - 1;
             if ( adj_matrix[ index ] ){
-               fprintf( fp, "%5d   %5d   %5f\n", i, j, (adj_matrix[ index ] * (randDouble() * 500)) );
-               graph[i-1][j-1] = adj_matrix[ index ] * (randDouble() * 500);
+                double x = randDouble() * 500;
+               fprintf( fp, "%5d   %5d   %5f\n", i, j, (adj_matrix[ index ] * (x)) );
+               graph[i-1][j-1] = adj_matrix[ index ] * (x);
             }else{
                 graph[i-1][j-1] = 0;
             }
