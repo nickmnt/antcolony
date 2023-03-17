@@ -20,7 +20,7 @@ int maxIterations = 20000;
 #define RAND_FACT_START 1.00
 #define RAND_FACT_END 0.10
 #define RAND_FACT_LAST_ITER 2000
-#define NUM_CITIES 13
+#define NUM_CITIES 10
 #define EPSILON 0.0001
 int best_tour_order[NUM_CITIES];
 double probabilities[NUM_CITIES];
@@ -220,6 +220,7 @@ void updateBest()
 void generateRandomMatrix() {
     int is_directed = 0;
     int e = int(NUM_CITIES*(NUM_CITIES-1)/2);
+    // int e = 20;
     int v = NUM_CITIES;
     hamiltonian_cycle_graph(v,e,is_directed,"output-graph.txt","ham-path.txt");
 }
@@ -434,8 +435,11 @@ void print_graph( int v,
                 double x = randDouble() * 500;
                fprintf( fp, "%5d   %5d   %5f\n", i, j, (adj_matrix[ index ] * (x)) );
                graph[i-1][j-1] = adj_matrix[ index ] * (x);
+               graph[j-1][i-1] = adj_matrix[ index ] * (x);
+
             }else{
                 graph[i-1][j-1] = 0;
+                graph[j-1][i-1] = 0;
             }
          }
    else
@@ -446,8 +450,11 @@ void print_graph( int v,
                 double x = randDouble() * 500;
                fprintf( fp, "%5d   %5d   %5f\n", i, j, (adj_matrix[ index ] * (x)) );
                graph[i-1][j-1] = adj_matrix[ index ] * (x);
+               graph[j-1][i-1] = adj_matrix[ index ] * (x);
+
             }else{
                 graph[i-1][j-1] = 0;
+                graph[j-1][i-1] = 0;
             }
          }
    fclose( fp );
