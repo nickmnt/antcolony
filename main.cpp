@@ -20,7 +20,7 @@ int maxIterations = 20000;
 #define RAND_FACT_START 1.00
 #define RAND_FACT_END 0.10
 #define RAND_FACT_LAST_ITER 2000
-#define NUM_CITIES 12
+#define NUM_CITIES 13
 #define EPSILON 0.0001
 int best_tour_order[NUM_CITIES];
 double probabilities[NUM_CITIES];
