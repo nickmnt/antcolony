@@ -44,11 +44,11 @@ double randDouble() {
 void generateRandomMatrix() {
     for(int i = 0; i < CITIES; ++i) {
         for(int j = 0; j < CITIES; ++j) {
-            if(randDouble() <= 1) {
-                distances[i][j] = randDouble() * 500;
+            if(randDouble() <= 0.01) {
+                distances[i][j] = 500;
                 hormone[i][j] = INIT_PHER;
             } else {
-                distances[i][j] = 300;
+                distances[i][j] = 0;
                 hormone[i][j] = INIT_PHER;
             }
         }
