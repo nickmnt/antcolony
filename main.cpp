@@ -219,7 +219,7 @@ void updateBest()
 
 void generateRandomMatrix() {
     int is_directed = 0;
-    hamiltonian_cycle_graph(NUM_CITIES,(NUM_CITIES*4),is_directed,"outpu-graph.txt","ham-path.txt");
+    hamiltonian_cycle_graph(NUM_CITIES,(NUM_CITIES*3),is_directed,"output-graph.txt","ham-path.txt");
 }
 
 int main()
@@ -276,8 +276,7 @@ int main()
     printf("Best tour length: %f", best_tour_length);
 }
 
-//TODO: Fix visiting city twice 
-//TODO(done): Fix no guarantee of having a solution in graph (in not fully connected)
+//TODO: Fix visiting city twice
 
 
 /* This function writes a simple graph with a Hamiltonian cycle to one
