@@ -14,7 +14,7 @@ double alpha = 1;
 double beta = 5;
 double evaporation = 0.5;
 double Q = 500;
-double antFactor = 0.8;
+double antFactor = 5.0;
 double randomFactor = 1.0;
 int maxIterations = 20000;
 #define RAND_FACT_START 1.00
@@ -220,7 +220,7 @@ void updateBest()
 void generateRandomMatrix() {
     int is_directed = 0;
     int e = int(NUM_CITIES*(NUM_CITIES-1)/2);
-    // int e = 20;
+    // int e = 15;
     int v = NUM_CITIES;
     hamiltonian_cycle_graph(v,e,is_directed,"output-graph.txt","ham-path.txt");
 }
@@ -264,7 +264,7 @@ int main()
 
     printf("\n Best tour:");
     for(int& i : best_tour_order) {
-        printf("%d -> ", i);
+        printf("%d -> ", i+1);
     }
 
     ofstream MyFile("results.txt");
