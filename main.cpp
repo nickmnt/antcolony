@@ -20,7 +20,7 @@ int maxIterations = 20000;
 #define RAND_FACT_START 1.00
 #define RAND_FACT_END 0.10
 #define RAND_FACT_LAST_ITER 2000
-#define NUM_CITIES 10
+#define NUM_CITIES 12
 #define EPSILON 0.0001
 int best_tour_order[NUM_CITIES];
 double probabilities[NUM_CITIES];
@@ -219,7 +219,9 @@ void updateBest()
 
 void generateRandomMatrix() {
     int is_directed = 0;
-    hamiltonian_cycle_graph(NUM_CITIES,(NUM_CITIES*3),is_directed,"output-graph.txt","ham-path.txt");
+    int e = int(NUM_CITIES*(NUM_CITIES-1)/2);
+    int v = NUM_CITIES;
+    hamiltonian_cycle_graph(v,e,is_directed,"output-graph.txt","ham-path.txt");
 }
 
 int main()
