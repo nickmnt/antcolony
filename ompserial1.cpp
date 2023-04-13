@@ -25,10 +25,8 @@ double randomFactor = 1.0;
 #define NUM_CITIES 15
 #define EPSILON 0.0001
 int best_tour_order[NUM_CITIES];
-double probabilities[NUM_CITIES];
 double graph[NUM_CITIES][NUM_CITIES];
 double trails[NUM_CITIES][NUM_CITIES];
-int current_index = 0;
 double best_tour_length = -1;
 
 void hamiltonian_cycle_graph( int v,
@@ -40,10 +38,12 @@ void hamiltonian_cycle_graph( int v,
 class Ant
 {
 public:
+    int current_index;
     bool visited[NUM_CITIES];
     int trail[NUM_CITIES];
 
     Ant() {
+        current_index = 0;
     }
 
     int trailSize() {
@@ -102,12 +102,11 @@ void setupAnts(int number_of_ants)
             ant.visitCity(-1, rand() % NUM_CITIES);
         }
     }
-    current_index = 0;
 }
 
-bool calculateProbabilities(Ant ant)
+bool calculateProbabilities(Ant ant, double* probabilities)
 {
-    int i = ant.trail[current_index];
+    int i = ant.trail[ant.current_index];
     double pheromone = 0.0;
     for (int l = 0; l < NUM_CITIES; l++)
     {
@@ -139,12 +138,13 @@ int selectNextCity(Ant ant)
     int t = rand() % NUM_CITIES;
     if (randDouble() < randomFactor)
     {
-        if ((!ant.isVisited(t)) && graph[ant.trail[current_index]][t] > 0) // ! should be inside
+        if ((!ant.isVisited(t)) && graph[ant.trail[ant.current_index]][t] > 0) // ! should be inside
         {
             return t;
         }
     }
-    if(!calculateProbabilities(ant)) {
+    double probabilities[NUM_CITIES];
+    if(!calculateProbabilities(ant, probabilities)) {
         return -1;
     }
     double r = randDouble();
@@ -159,34 +159,29 @@ int selectNextCity(Ant ant)
     return mxidx;
 }
 
-void moveAnts()
+bool moveAnts(Ant& ant)
 {
-    for (int i = current_index; i < NUM_CITIES-1; ++i)
+    // printf("ANT x\n");
+    for (int i = ant.current_index; i < NUM_CITIES-1; ++i)
     {
-        ants.erase(std::remove_if(ants.begin(), ants.end(), 
-                       [](Ant& ant) {
-                         int nextCity = selectNextCity(ant);
-                         if(nextCity == -1) {
-                            return true;
-                         }
-                         ant.visitCity(current_index, nextCity);
-                         return false;
-                         }), ants.end());
-        current_index++;
+        int nextCity = selectNextCity(ant);
+        if(nextCity == -1) {
+            return false;
+        }
+        ant.visitCity(ant.current_index, nextCity);
+        // printf("%d -> %d | ", ant.trail[i], ant.trail[i+1]);
+        ant.current_index++;
     }
+    // printf("\n NEXT \n");
+    return true;
 }
 
-void updateTrails()
-{
-    for (int i = 0; i < NUM_CITIES; i++)
+void calcAntContributions() {
+    int numberOfAnts = antFactor * NUM_CITIES;
+    #pragma omp parallel for
+    for (int i = 0; i < numberOfAnts; ++i)
     {
-        for (int j = 0; j < NUM_CITIES; j++)
-        {
-            trails[i][j] *= evaporation;
-        }
-    }
-    for (Ant& a : ants)
-    {
+        Ant& a = ants[i];
         double contribution = Q / a.trailLength();
         for (int i = 0; i < NUM_CITIES - 1; i++)
         {
@@ -196,10 +191,28 @@ void updateTrails()
     }
 }
 
+void calcEvaporations() {
+    for (int i = 0; i < NUM_CITIES; i++)
+    {
+        for (int j = 0; j < NUM_CITIES; j++)
+        {
+            trails[i][j] *= evaporation;
+        }
+    }
+}
+
+void updateTrails()
+{
+    calcEvaporations();
+    calcAntContributions();
+}
+
 void clone(int n, int* src, int* dest) {
     for(int i = 0; i < n; ++i) {
         dest[i] = src[i];
+        // printf("%d -> ", src[i]);
     }
+    // printf("\n");
 }
 
 void updateBest()
@@ -209,8 +222,11 @@ void updateBest()
         clone(NUM_CITIES, ants[0].trail, best_tour_order);
         best_tour_length = ants[0].trailLength();
     }
-    for (Ant& a : ants)
+    int numberOfAnts = antFactor * NUM_CITIES;
+    #pragma omp parallel for
+    for (int i = 0; i < numberOfAnts; ++i)
     {
+        Ant& a = ants[i];
         if (a.trailLength() < best_tour_length)
         {
             best_tour_length = a.trailLength();
@@ -229,6 +245,7 @@ void generateRandomMatrix() {
 
 int main()
 {
+    omp_set_num_threads(4);
     // srand((unsigned)time(NULL));
     double times[10];
     int w = 0;
@@ -238,7 +255,6 @@ int main()
     generateRandomMatrix();
     int numberOfAnts = (int)(NUM_CITIES * antFactor);
     for(int i = 0; i < NUM_CITIES; ++i) {
-        probabilities[i] = 0.5;
         best_tour_order[i] = -1;
     }
 
@@ -264,7 +280,18 @@ int main()
         }
         setupAnts(numberOfAnts);
         randomFactor = max(RAND_FACT_END, RAND_FACT_START - i / RAND_FACT_LAST_ITER);
-        moveAnts();
+        #pragma omp parallel for
+        for(int j = 0; j < numberOfAnts; ++j) {
+            Ant& ant = ants[j];
+            moveAnts(ant);
+            // if(j == 0) {
+                // for(int k = 0; k < NUM_CITIES; ++k) {
+                    // printf("%d -> ", ant.trail[k]);
+                // }
+                // printf("\n");
+            // }
+        }
+        // printf("\nAFTER MOVE ANTS\n");
         updateTrails();
         updateBest();
         best[i] = best_tour_length;
