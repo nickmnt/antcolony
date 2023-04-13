@@ -16,11 +16,11 @@ double evaporation = 0.5;
 double Q = 500;
 double antFactor = 5.0;
 double randomFactor = 1.0;
-int maxIterations = 20000;
+#define maxIterations  20000
 #define RAND_FACT_START 1.00
 #define RAND_FACT_END 0.10
 #define RAND_FACT_LAST_ITER 2000
-#define NUM_CITIES 10
+#define NUM_CITIES 6
 #define EPSILON 0.0001
 int best_tour_order[NUM_CITIES];
 double probabilities[NUM_CITIES];
@@ -275,7 +275,7 @@ int main()
     }
     MyFile.close();
 
-    printf("%d\n", best_tour_order[0]);
+    printf("%d\n", best_tour_order[0]+1);
     printf("Best tour length: %f", best_tour_length);
 }
 
