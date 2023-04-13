@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <algorithm>
 
+#include <omp.h>
+
 using namespace std;
 
 double c = 1.0;
@@ -20,7 +22,7 @@ double randomFactor = 1.0;
 #define RAND_FACT_START 1.00
 #define RAND_FACT_END 0.10
 #define RAND_FACT_LAST_ITER 2000
-#define NUM_CITIES 6
+#define NUM_CITIES 10
 #define EPSILON 0.0001
 int best_tour_order[NUM_CITIES];
 double probabilities[NUM_CITIES];
@@ -228,6 +230,10 @@ void generateRandomMatrix() {
 int main()
 {
     // srand((unsigned)time(NULL));
+    double times[10];
+    int w = 0;
+
+    times[w++] = omp_get_wtime();
 
     generateRandomMatrix();
     int numberOfAnts = (int)(NUM_CITIES * antFactor);
@@ -249,6 +255,8 @@ int main()
     //     // printf("\n");
     // }
 
+    times[w++] = omp_get_wtime();
+    
     for(int i = 0; i < maxIterations; ++i) {
         ants.clear();
         for(int j = 0; j < numberOfAnts; ++j) {
@@ -261,6 +269,8 @@ int main()
         updateBest();
         best[i] = best_tour_length;
     }
+
+    times[w++] = omp_get_wtime();
 
     printf("\n Best tour:");
     for(int& i : best_tour_order) {
@@ -277,6 +287,13 @@ int main()
 
     printf("%d\n", best_tour_order[0]+1);
     printf("Best tour length: %f", best_tour_length);
+
+    for (int i = 0; i < w; i++)
+    {
+        printf("time(%d) = %f \n",i,times[i]);
+    }
+    printf("total = %f", (times[w-1]-times[0]));
+    
 }
 
 //TODO: Fix visiting city twice
