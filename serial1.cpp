@@ -24,7 +24,6 @@ double randomFactor = 1.0;
 #define RAND_FACT_LAST_ITER 2000
 #define NUM_CITIES 20
 #define EPSILON 0.0001
-static int numberOfAnts = (int)(NUM_CITIES * antFactor);
 int best_tour_order[NUM_CITIES];
 double graph[NUM_CITIES][NUM_CITIES];
 double trails[NUM_CITIES][NUM_CITIES];
@@ -95,21 +94,14 @@ double randDouble() {
 
 void setupAnts(int number_of_ants)
 {
-    #pragma omp paralle
-    {
-        
-        #pragma omp for nowait
-        for (int i = 0; i < number_of_ants; ++i)
+    // for (int i = 0; i < number_of_ants; ++i)
+    // {
+        for (Ant& ant : ants)
         {
-            // for (Ant& ant : ants)
-            // {
-                Ant& ant = ants[i]; 
-                ant.clear();
-                ant.visitCity(-1, rand() % NUM_CITIES);
-            // }
+            ant.clear();
+            ant.visitCity(-1, rand() % NUM_CITIES);
         }
-
-    }
+    // }
 }
 
 bool calculateProbabilities(Ant ant, double* probabilities)
@@ -184,23 +176,8 @@ bool moveAnts(Ant& ant)
     return true;
 }
 
-void calcAntContributions(Ant& a) {
-    double contribution = Q / a.trailLength();
-    // int numberOfAnts = antFactor * NUM_CITIES;
-    // for (int i = 0; i < numberOfAnts; ++i)
-    // {
-        // Ant& a = ants[i];
-        #pragma omp parallel for
-        for (int i = 0; i < NUM_CITIES - 1; i++)
-        {
-            trails[a.trail[i]][a.trail[i + 1]] += contribution;
-        }
-        trails[a.trail[NUM_CITIES - 1]][a.trail[0]] += contribution;
-    // }
-}
-
-void calcEvaporations() {
-    // #pragma omp parallel for
+void updateTrails()
+{
     for (int i = 0; i < NUM_CITIES; i++)
     {
         for (int j = 0; j < NUM_CITIES; j++)
@@ -208,13 +185,16 @@ void calcEvaporations() {
             trails[i][j] *= evaporation;
         }
     }
+    for (Ant& a : ants)
+    {
+        double contribution = Q / a.trailLength();
+        for (int i = 0; i < NUM_CITIES - 1; i++)
+        {
+            trails[a.trail[i]][a.trail[i + 1]] += contribution;
+        }
+        trails[a.trail[NUM_CITIES - 1]][a.trail[0]] += contribution;
+    }
 }
-
-// void updateTrails()
-// {
-//     calcEvaporations();
-//     calcAntContributions();
-// }
 
 void clone(int n, int* src, int* dest) {
     for(int i = 0; i < n; ++i) {
@@ -224,134 +204,84 @@ void clone(int n, int* src, int* dest) {
     // printf("\n");
 }
 
-double updateBest()
+void updateBest()
 {
-    double len = -1;
     if (best_tour_order[0] == -1 && ants.size() > 0)
     {
         clone(NUM_CITIES, ants[0].trail, best_tour_order);
-        len = ants[0].trailLength();
+        best_tour_length = ants[0].trailLength();
     }
-    int numberOfAnts = antFactor * NUM_CITIES;
-
-    #pragma omp parallel for lastprivate(len)
-    for (int i = 0; i < numberOfAnts; ++i)
+    for (Ant& a : ants)
     {
-        Ant& a = ants[i];
-        if (a.trailLength() < len)
+        if (a.trailLength() < best_tour_length)
         {
-            len = a.trailLength();
+            best_tour_length = a.trailLength();
             clone(NUM_CITIES, a.trail, best_tour_order);
         }
     }
-
-    return len;
 }
 
 void generateRandomMatrix() {
     int is_directed = 0;
     int e = int(NUM_CITIES*(NUM_CITIES-1)/2);
+    // int e = 15;
     int v = NUM_CITIES;
     hamiltonian_cycle_graph(v,e,is_directed,"output-graph.txt","ham-path.txt");
 }
 
-void initBestTour(){
-    // #pragma omp parallel for  
-    for(int i = 0; i < NUM_CITIES; ++i) {
-        best_tour_order[i] = -1;
-    }
-}
-
 int main()
 {
-    omp_set_dynamic(0);
-    static int numthrd = omp_get_num_procs(); 
-    omp_set_num_threads(numthrd);
-
+    // srand((unsigned)time(NULL));
     double times[10];
     int w = 0;
 
     times[w++] = omp_get_wtime();
 
+    generateRandomMatrix();
+    int numberOfAnts = (int)(NUM_CITIES * antFactor);
+    for(int i = 0; i < NUM_CITIES; ++i) {
+        best_tour_order[i] = -1;
+    }
 
     double best[maxIterations];
-
-    
-    #pragma omp parallel
-    {
-        #pragma omp single nowait
-        {
-            #pragma omp task
-            {
-                generateRandomMatrix();
-            }
-            
-            #pragma omp task
-            {
-                initBestTour();
-            }
-        }
-
-        #pragma omp for collapse(2)
-        for(int i = 0; i < NUM_CITIES; ++i) {
-            for(int j = 0; j < NUM_CITIES; ++j) {
-                if(graph[i][j] == 0) {
-                    graph[i][j] = randDouble() * 500 + 1;
-                }
-                // printf("%.2f ", graph[i][j]);
-            }
-            // printf("\n");
-        }
-
-    }
     printf("\n        initializing...\n");
 
-    times[w++] = omp_get_wtime();
-
-    // #pragma omp parallel
-    // {
-
-        // #pragma omp parallel for firstprivate(randomFactor)
-            for(int i = 0; i < maxIterations; ++i) {
-                randomFactor = max(RAND_FACT_END, RAND_FACT_START - i / RAND_FACT_LAST_ITER);
-                
-                ants.clear();
-                for(int j = 0; j < numberOfAnts; ++j) {
-                    ants.push_back(Ant());
-                }
-
-                setupAnts(numberOfAnts);
-                
-                #pragma omp parallel for
-                for(int j = 0; j < numberOfAnts; ++j) {
-                    Ant& ant = ants[j];
-                    bool isMoved = moveAnts(ant);
-                    if (isMoved)
-                    {
-                        calcAntContributions(ant); 
-                    }
-                    
-                    // if(j == 0) {
-                        // for(int k = 0; k < NUM_CITIES; ++k) {
-                            // printf("%d -> ", ant.trail[k]);
-                        // }
-                        // printf("\n");
-                    // }
-                }
-                // printf("\nAFTER MOVE ANTS\n");
-                // updateTrails();
-
-                // #pragma omp single
-                // {
-                    calcEvaporations();
-                    best_tour_length = updateBest();
-                    best[i] = best_tour_length;
-                // }
-
+    for(int i = 0; i < NUM_CITIES; ++i) {
+        for(int j = 0; j < NUM_CITIES; ++j) {
+            if(graph[i][j] == 0) {
+                graph[i][j] = randDouble() * 500 + 1;
             }
+            // printf("%.2f ", graph[i][j]);
+        }
+        // printf("\n");
+    }
 
-    // }
+    times[w++] = omp_get_wtime();
     
+    for(int i = 0; i < maxIterations; ++i) {
+        ants.clear();
+        for(int j = 0; j < numberOfAnts; ++j) {
+            ants.push_back(Ant());
+        }
+        setupAnts(numberOfAnts);
+        randomFactor = max(RAND_FACT_END, RAND_FACT_START - i / RAND_FACT_LAST_ITER);
+        // #pragma omp parallel num_threads(4)
+        
+        for(int j = 0; j < numberOfAnts; ++j) {
+            Ant& ant = ants[j];
+            moveAnts(ant);
+            // if(j == 0) {
+                // for(int k = 0; k < NUM_CITIES; ++k) {
+                    // printf("%d -> ", ant.trail[k]);
+                // }
+                // printf("\n");
+            // }
+        }
+        // printf("\nAFTER MOVE ANTS\n");
+        updateTrails();
+        updateBest();
+        best[i] = best_tour_length;
+    }
 
     times[w++] = omp_get_wtime();
 
