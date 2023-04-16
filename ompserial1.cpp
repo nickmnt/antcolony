@@ -224,28 +224,28 @@ void clone(int n, int* src, int* dest) {
     // printf("\n");
 }
 
-double updateBest()
+void updateBest()
 {
-    double len = -1;
+    // double best_tour_length = -1;
     if (best_tour_order[0] == -1 && ants.size() > 0)
     {
         clone(NUM_CITIES, ants[0].trail, best_tour_order);
-        len = ants[0].trailLength();
+        best_tour_length = ants[0].trailLength();
     }
     int numberOfAnts = antFactor * NUM_CITIES;
 
-    #pragma omp parallel for lastprivate(len)
+    // #pragma omp parallel for
     for (int i = 0; i < numberOfAnts; ++i)
     {
         Ant& a = ants[i];
-        if (a.trailLength() < len)
+        if (a.trailLength() < best_tour_length)
         {
-            len = a.trailLength();
+            best_tour_length = a.trailLength();
             clone(NUM_CITIES, a.trail, best_tour_order);
         }
     }
-
-    return len;
+    // printf("len=%f\t",best_tour_length);
+    // return len;
 }
 
 void generateRandomMatrix() {
@@ -330,22 +330,16 @@ int main()
                     {
                         calcAntContributions(ant); 
                     }
-                    
-                    // if(j == 0) {
-                        // for(int k = 0; k < NUM_CITIES; ++k) {
-                            // printf("%d -> ", ant.trail[k]);
-                        // }
-                        // printf("\n");
-                    // }
+
                 }
-                // printf("\nAFTER MOVE ANTS\n");
                 // updateTrails();
 
                 // #pragma omp single
                 // {
                     calcEvaporations();
-                    best_tour_length = updateBest();
+                    updateBest();
                     best[i] = best_tour_length;
+                    // printf("len=%f",best_tour_length);
                 // }
 
             }
