@@ -93,23 +93,23 @@ double randDouble() {
     return ((double)rand()/(double)RAND_MAX);
 }
 
-void setupAnts(int number_of_ants)
+void setupAnts(Ant& ant)
 {
-    #pragma omp paralle
-    {
+    // #pragma omp paralle
+    // {
         
-        #pragma omp for nowait
-        for (int i = 0; i < number_of_ants; ++i)
-        {
+    //     #pragma omp for nowait
+        // for (int i = 0; i < number_of_ants; ++i)
+        // {
             // for (Ant& ant : ants)
             // {
-                Ant& ant = ants[i]; 
+                // Ant& ant = ants[i]; 
                 ant.clear();
                 ant.visitCity(-1, rand() % NUM_CITIES);
             // }
-        }
+        // }
 
-    }
+    // }
 }
 
 bool calculateProbabilities(Ant ant, double* probabilities)
@@ -292,6 +292,15 @@ int main()
             }
         }
 
+        // #pragma omp sections{
+        //     #pragma omp section
+        //     generateRandomMatrix();
+
+        //     #pragma omp section
+        //     initBestTour();
+
+        // }
+
         #pragma omp for collapse(2)
         for(int i = 0; i < NUM_CITIES; ++i) {
             for(int j = 0; j < NUM_CITIES; ++j) {
@@ -320,7 +329,10 @@ int main()
                     ants.push_back(Ant());
                 }
 
-                setupAnts(numberOfAnts);
+                for (int j = 0; j < numberOfAnts; ++j){
+                    Ant& ant = ants[j];
+                    setupAnts(ant);
+                }
                 
                 #pragma omp parallel for
                 for(int j = 0; j < numberOfAnts; ++j) {
@@ -333,12 +345,25 @@ int main()
 
                 }
                 // updateTrails();
-
-                // #pragma omp single
+                // #pragma omp parallel
                 // {
-                    calcEvaporations();
-                    updateBest();
-                    best[i] = best_tour_length;
+                //     #pragma omp single
+                //     {
+                //         #pragma omp sections
+                //         {
+                //             #pragma omp section
+                //             {
+                calcEvaporations();
+                            // }
+
+                            // #pragma omp section
+                            // {
+                updateBest();
+                best[i] = best_tour_length;
+                //             }
+                //         }
+                //     }
+                // }
                     // printf("len=%f",best_tour_length);
                 // }
 
@@ -363,7 +388,7 @@ int main()
     MyFile.close();
 
     printf("%d\n", best_tour_order[0]+1);
-    printf("Best tour length: %f", best_tour_length);
+    printf("Best tour length: %f\n", best_tour_length);
 
     for (int i = 0; i < w; i++)
     {
