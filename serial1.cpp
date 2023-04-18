@@ -270,19 +270,12 @@ int main()
         }
         setupAnts(numberOfAnts);
         randomFactor = max(RAND_FACT_END, RAND_FACT_START - i / RAND_FACT_LAST_ITER);
-        // #pragma omp parallel num_threads(4)
         
         for(int j = 0; j < numberOfAnts; ++j) {
             Ant& ant = ants[j];
             moveAnts(ant);
-            // if(j == 0) {
-                // for(int k = 0; k < NUM_CITIES; ++k) {
-                    // printf("%d -> ", ant.trail[k]);
-                // }
-                // printf("\n");
-            // }
+
         }
-        // printf("\nAFTER MOVE ANTS\n");
         updateTrails();
         updateBest();
         best[i] = best_tour_length;

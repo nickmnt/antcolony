@@ -15,7 +15,7 @@ double c = 1.0;
 double alpha = 1;                   // test others
 double beta = 5;                    // test others
 double evaporation = 0.5;           // test others
-double Q = 500;                     // test others
+double Q = 600;                     // test others
 double antFactor = 5.0;             // test others
 double randomFactor = 1.0;
 #define maxIterations  20000        // test others
@@ -318,10 +318,6 @@ int main()
 
     times[w++] = omp_get_wtime();
 
-    // #pragma omp parallel
-    // {
-
-        // #pragma omp parallel for firstprivate(randomFactor)
             for(int i = 0; i < maxIterations; ++i) {
                 randomFactor = max(RAND_FACT_END, RAND_FACT_START - i / RAND_FACT_LAST_ITER);
                 
@@ -345,32 +341,12 @@ int main()
                     }
 
                 }
-                // updateTrails();
-                // #pragma omp parallel
-                // {
-                //     #pragma omp single
-                //     {
-                //         #pragma omp sections
-                //         {
-                //             #pragma omp section
-                //             {
-                calcEvaporations();
-                            // }
 
-                            // #pragma omp section
-                            // {
+                calcEvaporations();
                 updateBest();
                 best[i] = best_tour_length;
-                //             }
-                //         }
-                //     }
-                // }
-                    // printf("len=%f",best_tour_length);
-                // }
-
             }
 
-    // }
     
 
     times[w++] = omp_get_wtime();
