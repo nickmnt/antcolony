@@ -93,23 +93,9 @@ double randDouble() {
     return ((double)rand()/(double)RAND_MAX);
 }
 
-void setupAnts(Ant& ant)
-{
-    // #pragma omp paralle
-    // {
-        
-    //     #pragma omp for nowait
-        // for (int i = 0; i < number_of_ants; ++i)
-        // {
-            // for (Ant& ant : ants)
-            // {
-                // Ant& ant = ants[i]; 
-                ant.clear();
-                ant.visitCity(-1, rand() % NUM_CITIES);
-            // }
-        // }
-
-    // }
+void setupAnts(Ant& ant){
+    ant.clear();
+    ant.visitCity(-1, rand() % NUM_CITIES);
 }
 
 bool calculateProbabilities(Ant ant, double* probabilities)
@@ -186,10 +172,6 @@ bool moveAnts(Ant& ant)
 
 void calcAntContributions(Ant& a) {
     double contribution = Q / a.trailLength();
-    // int numberOfAnts = antFactor * NUM_CITIES;
-    // for (int i = 0; i < numberOfAnts; ++i)
-    // {
-        // Ant& a = ants[i];
         #pragma omp reduction(+:trails[:NUM_CITIES][:NUM_CITIES])
         for (int i = 0; i < NUM_CITIES - 1; i++)
         {
@@ -199,7 +181,6 @@ void calcAntContributions(Ant& a) {
             } 
             trails[a.trail[i]][a.trail[x]] += contribution;
         }
-    // }
 }
 
 void calcEvaporations() {
@@ -320,12 +301,11 @@ int main()
 
             for(int i = 0; i < maxIterations; ++i) {
                 randomFactor = max(RAND_FACT_END, RAND_FACT_START - i / RAND_FACT_LAST_ITER);
-                
                 ants.clear();
                 for(int j = 0; j < numberOfAnts; ++j) {
                     ants.push_back(Ant());
                 }
-
+                // #pragma omp parallel for
                 for (int j = 0; j < numberOfAnts; ++j){
                     Ant& ant = ants[j];
                     setupAnts(ant);
@@ -335,13 +315,10 @@ int main()
                 for(int j = 0; j < numberOfAnts; ++j) {
                     Ant& ant = ants[j];
                     bool isMoved = moveAnts(ant);
-                    if (isMoved)
-                    {
+                    if (isMoved){
                         calcAntContributions(ant); 
                     }
-
                 }
-
                 calcEvaporations();
                 updateBest();
                 best[i] = best_tour_length;
