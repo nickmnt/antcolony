@@ -190,12 +190,15 @@ void calcAntContributions(Ant& a) {
     // for (int i = 0; i < numberOfAnts; ++i)
     // {
         // Ant& a = ants[i];
-        #pragma omp parallel for
+        #pragma omp reduction(+:trails[:NUM_CITIES][:NUM_CITIES])
         for (int i = 0; i < NUM_CITIES - 1; i++)
         {
-            trails[a.trail[i]][a.trail[i + 1]] += contribution;
+            int x = i+1;
+            if(i == NUM_CITIES-1) {
+                x = 0;
+            } 
+            trails[a.trail[i]][a.trail[x]] += contribution;
         }
-        trails[a.trail[NUM_CITIES - 1]][a.trail[0]] += contribution;
     // }
 }
 
