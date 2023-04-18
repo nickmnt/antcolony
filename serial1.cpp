@@ -15,7 +15,7 @@ double c = 1.0;
 double alpha = 1;
 double beta = 5;
 double evaporation = 0.5;
-double Q = 500;
+double Q = 600;
 double antFactor = 5.0;
 double randomFactor = 1.0;
 #define maxIterations  20000
@@ -229,19 +229,24 @@ void generateRandomMatrix() {
     hamiltonian_cycle_graph(v,e,is_directed,"output-graph.txt","ham-path.txt");
 }
 
+void initBestTour(){
+    // #pragma omp parallel for  
+    for(int i = 0; i < NUM_CITIES; ++i) {
+        best_tour_order[i] = -1;
+    }
+}
+
 int main()
 {
     // srand((unsigned)time(NULL));
     double times[10];
     int w = 0;
+    int numberOfAnts = (int)(NUM_CITIES * antFactor);
 
     times[w++] = omp_get_wtime();
 
     generateRandomMatrix();
-    int numberOfAnts = (int)(NUM_CITIES * antFactor);
-    for(int i = 0; i < NUM_CITIES; ++i) {
-        best_tour_order[i] = -1;
-    }
+    initBestTour();
 
     double best[maxIterations];
     printf("\n        initializing...\n");
@@ -299,7 +304,7 @@ int main()
     MyFile.close();
 
     printf("%d\n", best_tour_order[0]+1);
-    printf("Best tour length: %f", best_tour_length);
+    printf("Best tour length: %f\n", best_tour_length);
 
     for (int i = 0; i < w; i++)
     {
