@@ -16,13 +16,13 @@ double alpha = 1;                   // test others
 double beta = 5;                    // test others
 double evaporation = 0.5;           // test others
 double Q = 600;                     // test others
-double antFactor = 5.0;             // test others
+double antFactor = 1;             // test others
 double randomFactor = 1.0;
 #define maxIterations  20000        // test others
 #define RAND_FACT_START 1.00
 #define RAND_FACT_END 0.10
 #define RAND_FACT_LAST_ITER 2000
-#define NUM_CITIES 20               // test others
+#define NUM_CITIES 50               // test others
 #define EPSILON 0.0001
 static int numberOfAnts = (int)(NUM_CITIES * antFactor);
 int best_tour_order[NUM_CITIES];
@@ -187,6 +187,7 @@ void calcEvaporations() {
     // #pragma omp parallel for
     for (int i = 0; i < NUM_CITIES; i++)
     {
+        // #pragma omp reduction(*:trails[:NUM_CITIES][:NUM_CITIES])
         for (int j = 0; j < NUM_CITIES; j++)
         {
             trails[i][j] *= evaporation;
@@ -261,27 +262,29 @@ int main()
     
     #pragma omp parallel
     {
-        #pragma omp single nowait
-        {
-            #pragma omp task
-            {
-                generateRandomMatrix();
-            }
+        // #pragma omp single nowait
+        // {
+            // printf("nth= %d\n",omp_get_num_threads());
+            // #pragma omp task
+            // {
+            //     generateRandomMatrix();
+            // }
             
-            #pragma omp task
-            {
-                initBestTour();
-            }
-        }
-
-        // #pragma omp sections{
-        //     #pragma omp section
-        //     generateRandomMatrix();
-
-        //     #pragma omp section
-        //     initBestTour();
-
+            // #pragma omp task
+            // {
+            //     initBestTour();
+            // }
         // }
+            #pragma omp sections
+            {
+                #pragma omp section
+                generateRandomMatrix();
+
+                #pragma omp section
+                initBestTour();
+
+            }
+
 
         #pragma omp for collapse(2)
         for(int i = 0; i < NUM_CITIES; ++i) {
@@ -322,6 +325,10 @@ int main()
                 calcEvaporations();
                 updateBest();
                 best[i] = best_tour_length;
+
+                // if(i%100 == 1){
+                //     printf("time[%d] = %f\n",i,omp_get_wtime());
+                // }
             }
 
     
